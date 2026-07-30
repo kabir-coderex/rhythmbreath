@@ -26,7 +26,6 @@
     --text-secondary: #94A3B8;
     --text-muted: #64748B;
     --inhale-color: #5EC8FF;
-    --hold-color: #A78BFA;
     --exhale-color: #7CF6D7;
     --orb-size: min(65vw, 260px);
     --nav-height: 72px;
@@ -856,11 +855,6 @@ body {
                     </div>
                     <span class="pattern-sep">•</span>
                     <div class="pattern-step">
-                        <span class="pattern-val" id="valHold">3.0s</span>
-                        <span class="pattern-lbl">Hold</span>
-                    </div>
-                    <span class="pattern-sep">•</span>
-                    <div class="pattern-step">
                         <span class="pattern-val" id="valExhale">3.2s</span>
                         <span class="pattern-lbl">Exhale</span>
                     </div>
@@ -1051,11 +1045,11 @@ body {
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
                     <span style="color:var(--text-secondary);">Pattern</span>
-                    <strong id="prepPattern">3.2s / 3.0s / 3.2s</strong>
+                    <strong id="prepPattern">3.2s / 3.2s</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
                     <span style="color:var(--text-secondary);">Duration</span>
-                    <strong>5 Cycles (~2 mins)</strong>
+                    <strong>5 Cycles (~1.5 mins)</strong>
                 </div>
             </div>
 
@@ -1188,11 +1182,10 @@ function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-// Derive timing from score
+// Derive timing from score (Pure Inhale & Exhale)
 function getTimings(score) {
     const s = Math.round(score * 10) / 10;
-    const hold = Math.max(3.0, Math.round((s - 0.2) * 10) / 10);
-    return { inhale: s, hold: hold, exhale: s };
+    return { inhale: s, exhale: s };
 }
 
 // Stage Derivation
@@ -1290,7 +1283,6 @@ function playPhaseSound(type) {
 
         let freq = 440;
         if (type === 'INHALE') freq = 523.25; // C5
-        else if (type === 'HOLD') freq = 440.00; // A4
         else if (type === 'EXHALE') freq = 349.23; // F4
 
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
@@ -1322,12 +1314,11 @@ function updateUI() {
     document.getElementById("hdrStreak").textContent = state.streak;
     document.getElementById("hdrXp").textContent = state.xp;
 
-    // Timing
+    // Timing (Pure Inhale & Exhale)
     const timings = getTimings(state.breathScore);
     document.getElementById("valInhale").textContent = timings.inhale.toFixed(1) + "s";
-    document.getElementById("valHold").textContent = timings.hold.toFixed(1) + "s";
     document.getElementById("valExhale").textContent = timings.exhale.toFixed(1) + "s";
-    document.getElementById("prepPattern").textContent = `${timings.inhale.toFixed(1)}s / ${timings.hold.toFixed(1)}s / ${timings.exhale.toFixed(1)}s`;
+    document.getElementById("prepPattern").textContent = `${timings.inhale.toFixed(1)}s / ${timings.exhale.toFixed(1)}s`;
 
     // Stage
     const stage = getStage(state.sessions);
@@ -1417,13 +1408,6 @@ function setOrbState(phase) {
         orbAura.style.transform = "scale(1.4)";
         orbAura.style.opacity = "0.9";
         orbAura.style.background = "radial-gradient(circle, var(--inhale-color) 0%, rgba(94, 200, 255, 0) 70%)";
-    } else if (phase === 'HOLD') {
-        heroPhaseTitle.textContent = "HOLD";
-        heroPhaseTitle.style.color = "var(--hold-color)";
-        orbCore.style.transform = "scale(1.2)";
-        orbAura.style.transform = "scale(1.25)";
-        orbAura.style.opacity = "0.6";
-        orbAura.style.background = "radial-gradient(circle, var(--hold-color) 0%, rgba(167, 139, 250, 0) 70%)";
     } else if (phase === 'EXHALE') {
         heroPhaseTitle.textContent = "EXHALE";
         heroPhaseTitle.style.color = "var(--exhale-color)";
@@ -1478,10 +1462,7 @@ async function startHeroBreathing() {
         // 1. INHALE
         if (!(await runPhaseTimer("INHALE", timings.inhale))) break;
 
-        // 2. HOLD
-        if (!(await runPhaseTimer("HOLD", timings.hold))) break;
-
-        // 3. EXHALE
+        // 2. EXHALE
         if (!(await runPhaseTimer("EXHALE", timings.exhale))) break;
 
         currentCycle++;
