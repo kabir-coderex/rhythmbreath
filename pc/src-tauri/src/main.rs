@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
+use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, WindowEvent};
 
 fn main() {
     let quit = CustomMenuItem::new("quit".to_string(), "Quit RhythmBreathe");
@@ -16,30 +16,37 @@ fn main() {
     tauri::Builder::default()
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| match event {
+            // Left click on tray icon directly opens & focuses the application window
             SystemTrayEvent::LeftClick { .. } => {
-                let window = app.get_window("main").unwrap();
-                if window.is_visible().unwrap_or(false) {
-                    let _ = window.hide();
-                } else {
+                if let Some(window) = app.get_window("main") {
                     let _ = window.show();
                     let _ = window.set_focus();
                 }
             }
+            // Menu item interactions (Right click opens menu options)
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 "quit" => {
                     std::process::exit(0);
                 }
                 "toggle" => {
-                    let window = app.get_window("main").unwrap();
-                    if window.is_visible().unwrap_or(false) {
-                        let _ = window.hide();
-                    } else {
-                        let _ = window.show();
-                        let _ = window.set_focus();
+                    if let Some(window) = app.get_window("main") {
+                        if window.is_visible().unwrap_or(false) {
+                            let _ = window.hide();
+                        } else {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
                     }
                 }
                 _ => {}
             },
+            _ => {}
+        })
+        .on_window_event(|event| match event.event() {
+            WindowEvent::CloseRequested { api, .. } => {
+                api.prevent_close();
+                let _ = event.window().hide();
+            }
             _ => {}
         })
         .setup(|app| {
