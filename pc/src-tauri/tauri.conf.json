@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.tauri.app/config/1",
+  "build": {
+    "devPath": "../../web",
+    "distDir": "../../web",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
+  },
+  "package": {
+    "productName": "RhythmBreathe",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.rhythmbreathe.app",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "resources": [],
+      "shortDescription": "Mindful Breath & Sanctuary Desktop App",
+      "longDescription": "Interactive breathing exercises, visual sanctuary tree growth, and audio resonance for PC and macOS.",
+      "category": "Healthcare",
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "10.13"
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "RhythmBreathe - Mindful Breath & Sanctuary",
+        "width": 420,
+        "height": 680,
+        "minWidth": 360,
+        "minHeight": 560,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ]
+  }
+}

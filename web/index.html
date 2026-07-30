@@ -116,10 +116,10 @@ body {
 
 @media (min-width: 480px) {
     .app-frame {
-        height: 92vh;
-        height: 92dvh;
-        max-height: 900px;
-        border-radius: 40px;
+        height: 94vh;
+        height: 94dvh;
+        max-height: 720px;
+        border-radius: 32px;
         border: 1px solid var(--card-border);
     }
 }
@@ -495,7 +495,7 @@ body {
     filter: blur(35px);
     opacity: 0.5;
     transform: scale(0.8);
-    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s ease, background 1s ease;
+    transition: transform 0.08s ease-out, opacity 0.08s ease-out, background 0.4s ease;
 }
 
 .orb-core {
@@ -506,7 +506,7 @@ body {
     background: radial-gradient(circle at 30% 30%, #ffffff 0%, var(--primary) 60%, var(--accent) 100%);
     box-shadow: 0 0 50px var(--primary-glow), inset 0 0 20px rgba(255, 255, 255, 0.6);
     transform: scale(0.75);
-    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.08s ease-out;
 }
 
 .hero-timer-text {
@@ -831,7 +831,7 @@ body {
 <div class="app-frame">
 
     <!-- Top App Header -->
-    <header class="app-header">
+    <header class="app-header" data-tauri-drag-region>
         <div class="user-greeting">
             <span class="greeting-time" id="greetingTime">GOOD MORNING</span>
             <span class="greeting-name">Breath Master</span>
@@ -1441,36 +1441,54 @@ document.getElementById("beginSessionBtn").onclick = () => {
     startHeroBreathing();
 };
 
-function setOrbState(phase) {
+function setOrbState(phase, progress = 0) {
+    const minCoreScale = 0.65;
+    const maxCoreScale = 1.35;
+    const minAuraScale = 0.70;
+    const maxAuraScale = 1.50;
+    const minAuraOpacity = 0.25;
+    const maxAuraOpacity = 0.95;
+
     if (phase === 'INHALE') {
         heroPhaseTitle.textContent = "INHALE";
         heroPhaseTitle.style.color = "var(--inhale-color)";
-        orbCore.style.transform = "scale(1.25)";
-        orbAura.style.transform = "scale(1.4)";
-        orbAura.style.opacity = "0.9";
+        
+        const coreScale = minCoreScale + progress * (maxCoreScale - minCoreScale);
+        const auraScale = minAuraScale + progress * (maxAuraScale - minAuraScale);
+        const auraOpacity = minAuraOpacity + progress * (maxAuraOpacity - minAuraOpacity);
+
+        orbCore.style.transform = `scale(${coreScale.toFixed(3)})`;
+        orbAura.style.transform = `scale(${auraScale.toFixed(3)})`;
+        orbAura.style.opacity = auraOpacity.toFixed(3);
         orbAura.style.background = "radial-gradient(circle, var(--inhale-color) 0%, rgba(94, 200, 255, 0) 70%)";
     } else if (phase === 'EXHALE') {
         heroPhaseTitle.textContent = "EXHALE";
         heroPhaseTitle.style.color = "var(--exhale-color)";
-        orbCore.style.transform = "scale(0.75)";
-        orbAura.style.transform = "scale(0.8)";
-        orbAura.style.opacity = "0.3";
+        
+        const coreScale = maxCoreScale - progress * (maxCoreScale - minCoreScale);
+        const auraScale = maxAuraScale - progress * (maxAuraScale - minAuraScale);
+        const auraOpacity = maxAuraOpacity - progress * (maxAuraOpacity - minAuraOpacity);
+
+        orbCore.style.transform = `scale(${coreScale.toFixed(3)})`;
+        orbAura.style.transform = `scale(${auraScale.toFixed(3)})`;
+        orbAura.style.opacity = auraOpacity.toFixed(3);
         orbAura.style.background = "radial-gradient(circle, var(--exhale-color) 0%, rgba(124, 246, 215, 0) 70%)";
     }
-    playPhaseSound(phase);
-    triggerHaptic();
 }
 
 function runPhaseTimer(phaseName, durationSec) {
     return new Promise(resolve => {
         if (!isRunning) { resolve(false); return; }
 
-        setOrbState(phaseName);
+        setOrbState(phaseName, 0);
+        playPhaseSound(phaseName);
+        triggerHaptic();
+
         let elapsed = 0;
         heroTimer.textContent = durationSec.toFixed(1);
 
-        const stepMs = 100;
-        const totalSteps = durationSec * 10;
+        const stepMs = 50;
+        const totalSteps = Math.round(durationSec * (1000 / stepMs));
         let steps = 0;
 
         const interval = setInterval(() => {
@@ -1480,7 +1498,10 @@ function runPhaseTimer(phaseName, durationSec) {
                 return;
             }
             steps++;
-            elapsed = steps / 10;
+            const progress = Math.min(1.0, steps / totalSteps);
+            setOrbState(phaseName, progress);
+
+            elapsed = (steps * stepMs) / 1000;
             const remaining = Math.max(0, durationSec - elapsed);
             heroTimer.textContent = remaining.toFixed(1);
 

@@ -1,0 +1,14 @@
+{
+  "name": "rhythmbreathe-pc",
+  "version": "1.0.0",
+  "description": "RhythmBreathe PC & macOS Tauri Desktop Application",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.0"
+  }
+}
