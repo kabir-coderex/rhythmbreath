@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>RhythmBreathe - Mindful Breath & Sanctuary</title>
 
+<!-- PWA & Mobile Optimization -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#08131F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RhythmBreathe">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
+
 <!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -221,6 +232,18 @@ body {
     color: var(--gold);
     background: rgba(252, 211, 77, 0.12);
     border-color: rgba(252, 211, 77, 0.25);
+}
+
+.stat-pill.net-status {
+    color: var(--accent);
+    background: rgba(124, 246, 215, 0.12);
+    border-color: rgba(124, 246, 215, 0.25);
+}
+
+.stat-pill.net-status.offline {
+    color: #F87171;
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.25);
 }
 
 .icon-btn {
@@ -814,6 +837,10 @@ body {
             <span class="greeting-name">Breath Master</span>
         </div>
         <div class="header-badges">
+            <div class="stat-pill net-status" id="netStatusPill" title="Network Status">
+                <span id="netDot" style="width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;"></span>
+                <span id="netText" style="font-size:0.7rem;">OFFLINE</span>
+            </div>
             <div class="stat-pill streak" title="Daily Streak">
                 🔥 <span id="hdrStreak">1</span>
             </div>
@@ -1007,6 +1034,20 @@ body {
                     <button class="theme-chip" data-theme="forest">Forest</button>
                     <button class="theme-chip" data-theme="sunrise">Sunrise</button>
                 </div>
+            </div>
+
+            <!-- PWA & Offline Support Status Card -->
+            <div class="glass-card" id="pwaCard" style="display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="card-label">APP & OFFLINE STATUS</span>
+                    <span id="pwaStatusBadge" style="font-size:0.75rem; font-weight:700; color:var(--accent);">⚡ Ready Offline</span>
+                </div>
+                <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.4;">
+                    RhythmBreathe is a Progressive Web App. All sessions, audio, and sanctuary progress are saved locally on your device.
+                </p>
+                <button class="btn-hero" id="installPwaBtn" style="display:none; padding:12px; font-size:0.9rem; margin-top:4px;">
+                    📲 Install App on Device
+                </button>
             </div>
         </section>
 
@@ -1551,6 +1592,70 @@ document.querySelectorAll('.theme-chip').forEach(chip => {
         document.body.className = state.theme === 'night' ? '' : `theme-${state.theme}`;
         saveState();
     };
+});
+
+// --- SERVICE WORKER & OFFLINE PWA HANDLING ---
+let deferredPrompt = null;
+const netStatusPill = document.getElementById('netStatusPill');
+const netText = document.getElementById('netText');
+const netDot = document.getElementById('netDot');
+const installBtn = document.getElementById('installPwaBtn');
+const pwaStatusBadge = document.getElementById('pwaStatusBadge');
+
+function updateNetworkStatus() {
+    if (navigator.onLine) {
+        netStatusPill.classList.remove('offline');
+        netText.textContent = "ONLINE";
+        netStatusPill.style.display = "none"; // Hide pill when online unless desired
+        if (pwaStatusBadge) pwaStatusBadge.textContent = "⚡ Ready Offline";
+    } else {
+        netStatusPill.classList.add('offline');
+        netText.textContent = "OFFLINE MODE";
+        netStatusPill.style.display = "flex";
+        if (pwaStatusBadge) pwaStatusBadge.textContent = "📡 Offline Mode Active";
+    }
+}
+
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);
+updateNetworkStatus();
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then((reg) => {
+                console.log('[PWA] Service Worker registered successfully:', reg.scope);
+            })
+            .catch((err) => {
+                console.warn('[PWA] Service Worker registration failed:', err);
+            });
+    });
+}
+
+// PWA Installation Prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) {
+        installBtn.style.display = 'flex';
+        installBtn.onclick = () => {
+            installBtn.style.display = 'none';
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('[PWA] User accepted install prompt');
+                }
+                deferredPrompt = null;
+            });
+        };
+    }
+});
+
+window.addEventListener('appinstalled', () => {
+    console.log('[PWA] RhythmBreathe app installed');
+    if (installBtn) installBtn.style.display = 'none';
+    if (pwaStatusBadge) pwaStatusBadge.textContent = "✅ App Installed";
 });
 </script>
 </body>
