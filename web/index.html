@@ -72,6 +72,10 @@ body.theme-sunrise {
     user-select: none;
 }
 
+button, [role="button"], .nav-tab, .icon-btn, .rate-card, .theme-chip, .btn-hero, .stat-pill, .difficulty-chip, .practice-card, a, [onclick], summary {
+    cursor: pointer !important;
+}
+
 body {
     background-color: var(--bg-dark);
     background-image: var(--bg-gradient);
@@ -1114,7 +1118,7 @@ body {
         </div>
 
         <div class="gesture-hint">
-            Swipe ↑ Resume • ↓ Pause • Hold to Exit
+            Space / ↑ Resume • ↓ Pause • Esc to Exit
         </div>
     </div>
 
@@ -1591,6 +1595,25 @@ heroOverlay.addEventListener('touchend', (e) => {
         }
     }
 }, { passive: true });
+
+// --- KEYBOARD CONTROLS FOR PC & DESKTOP ---
+window.addEventListener('keydown', (e) => {
+    if (!heroOverlay.classList.contains("active")) return;
+
+    if (e.code === "Space" || e.code === "ArrowUp" || e.key === " ") {
+        e.preventDefault();
+        if (!isRunning) startHeroBreathing();
+    } else if (e.code === "ArrowDown") {
+        e.preventDefault();
+        isRunning = false;
+        heroPhaseTitle.textContent = "PAUSED";
+    } else if (e.code === "Escape") {
+        e.preventDefault();
+        isRunning = false;
+        heroOverlay.classList.remove("active");
+        triggerHaptic();
+    }
+});
 
 heroOverlay.addEventListener('click', () => {
     state.sound = !state.sound;
