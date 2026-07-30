@@ -18,6 +18,11 @@
         "open": true
       }
     },
+    "macOSPrivateApi": true,
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": false
+    },
     "bundle": {
       "active": true,
       "targets": "all",

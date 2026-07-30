@@ -1,5 +1,5 @@
-const CACHE_NAME = 'rhythmbreathe-shell-v1';
-const DYNAMIC_CACHE_NAME = 'rhythmbreathe-dynamic-v1';
+const CACHE_NAME = 'rhythmbreathe-shell-v3';
+const DYNAMIC_CACHE_NAME = 'rhythmbreathe-dynamic-v3';
 
 const STATIC_ASSETS = [
     './',
