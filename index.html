@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RhythmBreathe - Mindful Breath & Sanctuary</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-dark: #08131F;
+    --bg-gradient: radial-gradient(circle at 50% 20%, #0f2438 0%, #08131F 100%);
+    --card-bg: rgba(15, 29, 45, 0.7);
+    --card-border: rgba(94, 200, 255, 0.12);
+    --primary: #5EC8FF;
+    --primary-glow: rgba(94, 200, 255, 0.35);
+    --accent: #7CF6D7;
+    --accent-glow: rgba(124, 246, 215, 0.35);
+    --gold: #FCD34D;
+    --gold-glow: rgba(252, 211, 77, 0.3);
+    --text-primary: #FFFFFF;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --inhale-color: #5EC8FF;
+    --hold-color: #A78BFA;
+    --exhale-color: #7CF6D7;
+    --orb-size: min(65vw, 260px);
+    --nav-height: 72px;
+}
+
+/* Theme Presets */
+body.theme-ocean {
+    --bg-dark: #051424;
+    --bg-gradient: radial-gradient(circle at 50% 30%, #082947 0%, #030d19 100%);
+    --primary: #38BDF8;
+    --accent: #34D399;
+}
+
+body.theme-forest {
+    --bg-dark: #061712;
+    --bg-gradient: radial-gradient(circle at 50% 30%, #0b2f24 0%, #04100c 100%);
+    --primary: #34D399;
+    --accent: #A3E635;
+}
+
+body.theme-sunrise {
+    --bg-dark: #1a0b1c;
+    --bg-gradient: radial-gradient(circle at 50% 30%, #36173b 0%, #120614 100%);
+    --primary: #FB7185;
+    --accent: #FBBF24;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    background-image: var(--bg-gradient);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Canvas Background */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Mobile Frame Wrapper */
+.app-frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: rgba(8, 19, 31, 0.45);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+@media (min-width: 480px) {
+    .app-frame {
+        height: 92vh;
+        height: 92dvh;
+        max-height: 900px;
+        border-radius: 40px;
+        border: 1px solid var(--card-border);
+    }
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    padding: 20px 20px calc(var(--nav-height) + 20px) 20px;
+}
+
+.main-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* Screen Views */
+.view-screen {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.view-screen.active {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Glass Card */
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 20px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+/* --- TOP HEADER BAR --- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 8px 20px;
+    z-index: 5;
+}
+
+.user-greeting {
+    display: flex;
+    flex-direction: column;
+}
+
+.greeting-time {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+}
+
+.greeting-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.header-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.stat-pill.streak {
+    color: #FF8F3D;
+    background: rgba(255, 143, 61, 0.12);
+    border-color: rgba(255, 143, 61, 0.25);
+}
+
+.stat-pill.xp {
+    color: var(--gold);
+    background: rgba(252, 211, 77, 0.12);
+    border-color: rgba(252, 211, 77, 0.25);
+}
+
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.icon-btn:active {
+    transform: scale(0.92);
+}
+
+/* --- HERO BREATH TREE CANVAS --- */
+.hero-tree-container {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 24px;
+    background: radial-gradient(circle at 50% 60%, rgba(94, 200, 255, 0.15) 0%, rgba(8, 19, 31, 0) 70%);
+}
+
+#tree-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 24px;
+}
+
+.sanctuary-stage-tag {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(8, 19, 31, 0.7);
+    border: 1px solid var(--card-border);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(8px);
+}
+
+/* --- TODAY'S PRACTICE CARD --- */
+.practice-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.practice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+}
+
+.difficulty-chip {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(124, 246, 215, 0.12);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(124, 246, 215, 0.25);
+}
+
+.pattern-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 18px;
+    padding: 14px 10px;
+    text-align: center;
+}
+
+.pattern-step {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pattern-val {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.pattern-lbl {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.pattern-sep {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* Primary Button */
+.btn-hero {
+    width: 100%;
+    border: none;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: #061524;
+    padding: 16px;
+    border-radius: 20px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px var(--primary-glow);
+    transition: all 0.25s ease;
+}
+
+.btn-hero:active {
+    transform: scale(0.97);
+    box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+/* --- BOTTOM NAV BAR --- */
+.bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    background: rgba(8, 19, 31, 0.85);
+    border-top: 1px solid var(--card-border);
+    backdrop-filter: blur(20px);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px env(safe-area-inset-bottom) 10px;
+    z-index: 10;
+}
+
+.nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 8px 0;
+}
+
+.nav-tab svg {
+    width: 22px;
+    height: 22px;
+    transition: transform 0.2s ease, stroke 0.2s ease;
+}
+
+.nav-tab.active {
+    color: var(--primary);
+}
+
+.nav-tab.active svg {
+    stroke: var(--primary);
+    transform: translateY(-2px);
+}
+
+/* --- HERO BREATHING OVERLAY (FULLSCREEN MINIMAL) --- */
+.breathing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    background-image: var(--bg-gradient);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.breathing-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.hero-phase-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--primary);
+    text-shadow: 0 0 30px var(--primary-glow);
+    margin-top: 20px;
+    transition: color 0.5s ease;
+}
+
+/* Glowing Breathing Orb */
+.orb-stage {
+    position: relative;
+    width: var(--orb-size);
+    height: var(--orb-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.orb-aura {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--primary) 0%, rgba(94, 200, 255, 0) 70%);
+    filter: blur(35px);
+    opacity: 0.5;
+    transform: scale(0.8);
+    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s ease, background 1s ease;
+}
+
+.orb-core {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, var(--primary) 60%, var(--accent) 100%);
+    box-shadow: 0 0 50px var(--primary-glow), inset 0 0 20px rgba(255, 255, 255, 0.6);
+    transform: scale(0.75);
+    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-timer-text {
+    position: absolute;
+    font-size: 3.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+}
+
+.gesture-hint {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 18px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- MODAL DIALOGS --- */
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(4, 10, 18, 0.82);
+    backdrop-filter: blur(12px);
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    width: 100%;
+    background: rgba(15, 29, 45, 0.95);
+    border: 1px solid var(--card-border);
+    border-radius: 28px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    transform: scale(0.92);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-backdrop.active .modal-box {
+    transform: scale(1);
+}
+
+.rating-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.rate-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rate-card:active {
+    transform: scale(0.95);
+    background: rgba(94, 200, 255, 0.15);
+    border-color: var(--primary);
+}
+
+.rate-emoji {
+    font-size: 1.5rem;
+}
+
+.rate-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.rate-delta {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+/* --- JOURNEY & SANCTUARY TAB --- */
+.sanctuary-growth-card {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.stage-timeline {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+    position: relative;
+}
+
+.stage-timeline::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 1;
+}
+
+.timeline-dot {
+    position: relative;
+    z-index: 2;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #0d1e30;
+    border: 2px solid var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.timeline-dot.achieved {
+    border-color: var(--accent);
+    background: rgba(124, 246, 215, 0.2);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.unlocks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.unlock-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 12px 16px;
+}
+
+.unlock-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.unlock-icon {
+    font-size: 1.4rem;
+}
+
+.unlock-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.unlock-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.unlock-desc {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.unlock-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+}
+
+.unlock-tag.unlocked {
+    background: rgba(124, 246, 215, 0.15);
+    color: var(--accent);
+}
+
+/* --- ACHIEVEMENTS TAB --- */
+.badge-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.badge-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    transition: transform 0.2s ease;
+}
+
+.badge-card.locked {
+    opacity: 0.45;
+    filter: grayscale(0.8);
+}
+
+.badge-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(94, 200, 255, 0.12);
+    border: 1px solid rgba(94, 200, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+}
+
+.badge-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.badge-sub {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* --- PROFILE TAB --- */
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-card-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.stat-card-lbl {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.theme-chip {
+    padding: 8px 4px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+}
+
+.theme-chip.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(94, 200, 255, 0.15);
+}
+</style>
+</head>
+<body>
+
+<!-- Background Canvas Particles -->
+<canvas id="bg-canvas"></canvas>
+
+<div class="app-frame">
+
+    <!-- Top App Header -->
+    <header class="app-header">
+        <div class="user-greeting">
+            <span class="greeting-time" id="greetingTime">GOOD MORNING</span>
+            <span class="greeting-name">Breath Master</span>
+        </div>
+        <div class="header-badges">
+            <div class="stat-pill streak" title="Daily Streak">
+                🔥 <span id="hdrStreak">1</span>
+            </div>
+            <div class="stat-pill xp" title="Total XP">
+                ⚡ <span id="hdrXp">0</span>
+            </div>
+            <button class="icon-btn" id="audioToggleBtn" aria-label="Toggle Sound">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path id="soundWaves" d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Views Container -->
+    <main class="main-content">
+
+        <!-- ================= HOME VIEW ================= -->
+        <section class="view-screen active" id="view-home">
+            
+            <!-- Breath Tree Hero Canvas Card -->
+            <div class="hero-tree-container">
+                <canvas id="tree-canvas"></canvas>
+                <div class="sanctuary-stage-tag" id="homeStageTag">🌱 SEED STAGE</div>
+            </div>
+
+            <!-- Today's Practice Card -->
+            <div class="glass-card practice-card">
+                <div class="practice-header">
+                    <span class="card-label">TODAY'S PRACTICE</span>
+                    <span class="difficulty-chip" id="homeDiffChip">COMFORT I</span>
+                </div>
+
+                <div class="pattern-display">
+                    <div class="pattern-step">
+                        <span class="pattern-val" id="valInhale">3.2s</span>
+                        <span class="pattern-lbl">Inhale</span>
+                    </div>
+                    <span class="pattern-sep">•</span>
+                    <div class="pattern-step">
+                        <span class="pattern-val" id="valHold">3.0s</span>
+                        <span class="pattern-lbl">Hold</span>
+                    </div>
+                    <span class="pattern-sep">•</span>
+                    <div class="pattern-step">
+                        <span class="pattern-val" id="valExhale">3.2s</span>
+                        <span class="pattern-lbl">Exhale</span>
+                    </div>
+                </div>
+
+                <button class="btn-hero" id="homeStartBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Start Session</span>
+                </button>
+            </div>
+
+            <!-- Quick Insight Card -->
+            <div class="glass-card" style="display:flex; align-items:center; gap:14px;">
+                <div style="font-size:2rem;">🌿</div>
+                <div>
+                    <h4 style="font-size:0.9rem; font-weight:700;">Sanctuary Growing</h4>
+                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">
+                        Complete today's session to water your breath tree.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= JOURNEY VIEW ================= -->
+        <section class="view-screen" id="view-journey">
+            <div class="glass-card sanctuary-growth-card">
+                <span class="card-label">BREATH SANCTUARY</span>
+                <h3 id="journeyStageTitle" style="font-size:1.3rem; margin-top:2px;">Seed Stage</h3>
+                <p style="font-size:0.78rem; color:var(--text-secondary);">
+                    Your sanctuary evolves with every consistent session.
+                </p>
+
+                <div class="stage-timeline">
+                    <div class="timeline-dot achieved" id="dot1" title="Seed">🌱</div>
+                    <div class="timeline-dot" id="dot2" title="Sprout">🌿</div>
+                    <div class="timeline-dot" id="dot3" title="Sapling">🪴</div>
+                    <div class="timeline-dot" id="dot4" title="Tree">🌳</div>
+                    <div class="timeline-dot" id="dot5" title="Ancient">🏛️</div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <span class="card-label" style="margin-bottom:12px; display:block;">SANCTUARY UNLOCKS</span>
+                
+                <div class="unlocks-grid">
+                    <div class="unlock-item">
+                        <div class="unlock-info">
+                            <span class="unlock-icon">🌊</span>
+                            <div class="unlock-text">
+                                <span class="unlock-title">Ocean Breeze Theme</span>
+                                <span class="unlock-desc">Serene wave soundscapes</span>
+                            </div>
+                        </div>
+                        <span class="unlock-tag unlocked" id="tagOcean">Unlocked</span>
+                    </div>
+
+                    <div class="unlock-item">
+                        <div class="unlock-info">
+                            <span class="unlock-icon">🌲</span>
+                            <div class="unlock-text">
+                                <span class="unlock-title">Forest Sanctuary</span>
+                                <span class="unlock-desc">Requires Sprout Stage</span>
+                            </div>
+                        </div>
+                        <span class="unlock-tag" id="tagForest">Locked</span>
+                    </div>
+
+                    <div class="unlock-item">
+                        <div class="unlock-info">
+                            <span class="unlock-icon">🌅</span>
+                            <div class="unlock-text">
+                                <span class="unlock-title">Sunrise Bliss</span>
+                                <span class="unlock-desc">Requires Sapling Stage</span>
+                            </div>
+                        </div>
+                        <span class="unlock-tag" id="tagSunrise">Locked</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= ACHIEVEMENTS VIEW ================= -->
+        <section class="view-screen" id="view-achievements">
+            <div class="glass-card">
+                <span class="card-label">MILESTONES & BADGES</span>
+                <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:4px;">
+                    Earn badges as your lung capacity and habits strengthen.
+                </p>
+            </div>
+
+            <div class="badge-grid">
+                <div class="badge-card" id="badgeFirst">
+                    <div class="badge-icon-wrap">🌱</div>
+                    <span class="badge-name">First Step</span>
+                    <span class="badge-sub">Complete 1 session</span>
+                </div>
+
+                <div class="badge-card locked" id="badgeStreak7">
+                    <div class="badge-icon-wrap">🔥</div>
+                    <span class="badge-name">Consistent Flame</span>
+                    <span class="badge-sub">7-day streak</span>
+                </div>
+
+                <div class="badge-card locked" id="badgeScore35">
+                    <div class="badge-icon-wrap">🫁</div>
+                    <span class="badge-name">Vagus Expansion</span>
+                    <span class="badge-sub">Breath Score 3.5+</span>
+                </div>
+
+                <div class="badge-card locked" id="badgeTree">
+                    <div class="badge-icon-wrap">🌳</div>
+                    <span class="badge-name">Sanctuary Keeper</span>
+                    <span class="badge-sub">Reach Tree Stage</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PROFILE VIEW ================= -->
+        <section class="view-screen" id="view-profile">
+            <div class="glass-card" style="text-align:center;">
+                <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, var(--primary), var(--accent)); margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; font-size:2rem;">🧘</div>
+                <h3 style="font-size:1.2rem; font-weight:800;">Breath Master</h3>
+                <span style="font-size:0.75rem; color:var(--accent); font-weight:700;" id="profLevel">Level 1 • Beginner</span>
+            </div>
+
+            <div class="profile-stats-grid">
+                <div class="stat-card">
+                    <span class="stat-card-val" id="profScore">3.00</span>
+                    <span class="stat-card-lbl">Breath Score</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-card-val" id="profSessions">0</span>
+                    <span class="stat-card-lbl">Sessions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-card-val" id="profMinutes">0</span>
+                    <span class="stat-card-lbl">Total Mins</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-card-val" id="profStreak">1</span>
+                    <span class="stat-card-lbl">Longest Streak</span>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <span class="card-label">BACKGROUND THEMES</span>
+                <div class="theme-options">
+                    <button class="theme-chip active" data-theme="night">Night</button>
+                    <button class="theme-chip" data-theme="ocean">Ocean</button>
+                    <button class="theme-chip" data-theme="forest">Forest</button>
+                    <button class="theme-chip" data-theme="sunrise">Sunrise</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-tab active" data-target="view-home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Home</span>
+        </button>
+        <button class="nav-tab" data-target="view-journey">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Journey</span>
+        </button>
+        <button class="nav-tab" data-target="view-achievements">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+            <span>Badges</span>
+        </button>
+        <button class="nav-tab" data-target="view-profile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Profile</span>
+        </button>
+    </nav>
+
+    <!-- ================= SESSION PREP MODAL ================= -->
+    <div class="modal-backdrop" id="prepModal">
+        <div class="modal-box">
+            <span class="card-label">SESSION PREPARATION</span>
+            <h3 style="font-size:1.3rem;">Focus & Calm</h3>
+            
+            <div style="display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,0.03); padding:14px; border-radius:18px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <span style="color:var(--text-secondary);">Goal</span>
+                    <strong style="color:var(--accent);">Adapt Capacity (+0.03s)</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <span style="color:var(--text-secondary);">Pattern</span>
+                    <strong id="prepPattern">3.2s / 3.0s / 3.2s</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <span style="color:var(--text-secondary);">Duration</span>
+                    <strong>5 Cycles (~2 mins)</strong>
+                </div>
+            </div>
+
+            <button class="btn-hero" id="beginSessionBtn">
+                <span>Begin Breathing</span>
+            </button>
+            <button style="background:none; border:none; color:var(--text-muted); font-size:0.8rem; cursor:pointer;" id="closePrepBtn">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= BREATHING SCREEN (MINIMAL HERO OVERLAY) ================= -->
+    <div class="breathing-overlay" id="heroBreathingOverlay">
+        <div class="hero-phase-title" id="heroPhaseTitle">READY</div>
+
+        <div class="orb-stage">
+            <div class="orb-aura" id="orbAura"></div>
+            <div class="orb-core" id="orbCore"></div>
+            <div class="hero-timer-text" id="heroTimer">3.0</div>
+        </div>
+
+        <div class="gesture-hint">
+            Swipe ↑ Resume • ↓ Pause • Hold to Exit
+        </div>
+    </div>
+
+    <!-- ================= COMPLETION MODAL ================= -->
+    <div class="modal-backdrop" id="completionModal">
+        <div class="modal-box">
+            <div style="font-size:3rem; margin-bottom:-10px;">✨</div>
+            <h2>Session Complete!</h2>
+            <p style="font-size:0.8rem; color:var(--text-secondary);">
+                +50 XP Earned • Streak Maintained!
+            </p>
+
+            <span class="card-label" style="margin-top:6px;">HOW DID THAT FEEL?</span>
+
+            <div class="rating-options">
+                <div class="rate-card" data-rate="easy">
+                    <span class="rate-emoji">🟢</span>
+                    <span class="rate-title">Too Easy</span>
+                    <span class="rate-delta">+0.05 Score</span>
+                </div>
+                <div class="rate-card" data-rate="good">
+                    <span class="rate-emoji">🔵</span>
+                    <span class="rate-title">Just Right</span>
+                    <span class="rate-delta">+0.03 Score</span>
+                </div>
+                <div class="rate-card" data-rate="hard">
+                    <span class="rate-emoji">🟠</span>
+                    <span class="rate-title">Challenging</span>
+                    <span class="rate-delta">Keep Score</span>
+                </div>
+                <div class="rate-card" data-rate="toohard">
+                    <span class="rate-emoji">🔴</span>
+                    <span class="rate-title">Too Hard</span>
+                    <span class="rate-delta">-0.02 Score</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// --- CANVAS BACKGROUND PARTICLES ---
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Particle {
+    constructor() { this.reset(); }
+    reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 2 + 0.5;
+        this.alpha = Math.random() * 0.4 + 0.1;
+        this.vx = (Math.random() - 0.5) * 0.25;
+        this.vy = (Math.random() - 0.5) * 0.25;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(94, 200, 255, ${this.alpha})`;
+        ctx.fill();
+    }
+}
+for (let i = 0; i < 40; i++) particles.push(new Particle());
+
+function renderBgParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(renderBgParticles);
+}
+renderBgParticles();
+
+// --- STATE MANAGEMENT ---
+const STORAGE_KEY = "rhythm_breathe_mobile_v1";
+
+let state = {
+    breathScore: 3.00,
+    xp: 0,
+    level: 1,
+    streak: 1,
+    sessions: 0,
+    totalMinutes: 0,
+    theme: 'night',
+    sound: true
+};
+
+const saved = localStorage.getItem(STORAGE_KEY);
+if (saved) {
+    try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+}
+
+function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// Derive timing from score
+function getTimings(score) {
+    const s = Math.round(score * 10) / 10;
+    const hold = Math.max(3.0, Math.round((s - 0.2) * 10) / 10);
+    return { inhale: s, hold: hold, exhale: s };
+}
+
+// Stage Derivation
+function getStage(sessions) {
+    if (sessions < 3) return { name: "Seed Stage", tag: "🌱 SEED STAGE", icon: "🌱", index: 1 };
+    if (sessions < 8) return { name: "Sprout Stage", tag: "🌿 SPROUT STAGE", icon: "🌿", index: 2 };
+    if (sessions < 15) return { name: "Sapling Stage", tag: "🪴 SAPLING STAGE", icon: "🪴", index: 3 };
+    if (sessions < 25) return { name: "Sacred Tree", tag: "🌳 SACRED TREE", icon: "🌳", index: 4 };
+    return { name: "Ancient Sanctuary", tag: "🏛️ ANCIENT SANCTUARY", icon: "🏛️", index: 5 };
+}
+
+// --- SANCTUARY BREATH TREE CANVAS RENDERER ---
+const treeCanvas = document.getElementById('tree-canvas');
+const treeCtx = treeCanvas.getContext('2d');
+
+function drawSanctuaryTree() {
+    const rect = treeCanvas.getBoundingClientRect();
+    treeCanvas.width = rect.width;
+    treeCanvas.height = rect.height;
+    
+    const stage = getStage(state.sessions).index;
+    const cx = treeCanvas.width / 2;
+    const bottomY = treeCanvas.height - 20;
+
+    treeCtx.clearRect(0, 0, treeCanvas.width, treeCanvas.height);
+
+    // Glowing base aura
+    const aura = treeCtx.createRadialGradient(cx, bottomY - 60, 10, cx, bottomY - 60, 120);
+    aura.addColorStop(0, 'rgba(124, 246, 215, 0.25)');
+    aura.addColorStop(1, 'rgba(8, 19, 31, 0)');
+    treeCtx.fillStyle = aura;
+    treeCtx.beginPath();
+    treeCtx.arc(cx, bottomY - 60, 120, 0, Math.PI * 2);
+    treeCtx.fill();
+
+    // Draw Trunk & Branches depending on stage
+    treeCtx.strokeStyle = "#5EC8FF";
+    treeCtx.lineCap = "round";
+
+    if (stage === 1) { // Seed
+        treeCtx.lineWidth = 4;
+        treeCtx.beginPath();
+        treeCtx.moveTo(cx, bottomY);
+        treeCtx.lineTo(cx, bottomY - 35);
+        treeCtx.stroke();
+
+        // Seedling leaf
+        treeCtx.fillStyle = "#7CF6D7";
+        treeCtx.beginPath();
+        treeCtx.arc(cx - 8, bottomY - 38, 8, 0, Math.PI);
+        treeCtx.fill();
+    } else if (stage >= 2) { // Sprout / Tree
+        const height = Math.min(130, 45 + stage * 18);
+        treeCtx.lineWidth = Math.min(10, 3 + stage * 1.5);
+        treeCtx.beginPath();
+        treeCtx.moveTo(cx, bottomY);
+        treeCtx.lineTo(cx, bottomY - height);
+        treeCtx.stroke();
+
+        // Branches & Foliage
+        const leavesCount = stage * 6;
+        for (let i = 0; i < leavesCount; i++) {
+            const angle = (i / leavesCount) * Math.PI * 2;
+            const lx = cx + Math.cos(angle) * (15 + stage * 8);
+            const ly = (bottomY - height) + Math.sin(angle) * (15 + stage * 6);
+
+            treeCtx.fillStyle = i % 2 === 0 ? "rgba(124, 246, 215, 0.6)" : "rgba(94, 200, 255, 0.6)";
+            treeCtx.beginPath();
+            treeCtx.arc(lx, ly, 10 + stage * 2, 0, Math.PI * 2);
+            treeCtx.fill();
+        }
+    }
+}
+
+// --- AUDIO & SYNTH ---
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playPhaseSound(type) {
+    if (!state.sound) return;
+    try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+
+        let freq = 440;
+        if (type === 'INHALE') freq = 523.25; // C5
+        else if (type === 'HOLD') freq = 440.00; // A4
+        else if (type === 'EXHALE') freq = 349.23; // F4
+
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.15, audioCtx.currentTime + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.9);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.9);
+    } catch(e) {}
+}
+
+function triggerHaptic() {
+    if ('vibrate' in navigator) {
+        try { navigator.vibrate(30); } catch(e) {}
+    }
+}
+
+// --- UI UPDATE ROUTINE ---
+function updateUI() {
+    // Time Greeting
+    const hour = new Date().getHours();
+    const greetingStr = hour < 12 ? "GOOD MORNING" : hour < 18 ? "GOOD AFTERNOON" : "GOOD EVENING";
+    document.getElementById("greetingTime").textContent = greetingStr;
+
+    // Header Badges
+    document.getElementById("hdrStreak").textContent = state.streak;
+    document.getElementById("hdrXp").textContent = state.xp;
+
+    // Timing
+    const timings = getTimings(state.breathScore);
+    document.getElementById("valInhale").textContent = timings.inhale.toFixed(1) + "s";
+    document.getElementById("valHold").textContent = timings.hold.toFixed(1) + "s";
+    document.getElementById("valExhale").textContent = timings.exhale.toFixed(1) + "s";
+    document.getElementById("prepPattern").textContent = `${timings.inhale.toFixed(1)}s / ${timings.hold.toFixed(1)}s / ${timings.exhale.toFixed(1)}s`;
+
+    // Stage
+    const stage = getStage(state.sessions);
+    document.getElementById("homeStageTag").textContent = stage.tag;
+    document.getElementById("journeyStageTitle").textContent = stage.name;
+
+    // Timeline dots
+    for (let i = 1; i <= 5; i++) {
+        const dot = document.getElementById(`dot${i}`);
+        if (dot) dot.classList.toggle('achieved', i <= stage.index);
+    }
+
+    // Profile Stats
+    document.getElementById("profScore").textContent = state.breathScore.toFixed(2);
+    document.getElementById("profSessions").textContent = state.sessions;
+    document.getElementById("profMinutes").textContent = Math.round(state.sessions * 2);
+    document.getElementById("profStreak").textContent = state.streak;
+    document.getElementById("profLevel").textContent = `Level ${Math.floor(state.xp / 200) + 1} • Mindful Practitioner`;
+
+    // Unlocks & Badges
+    if (state.sessions >= 3) {
+        document.getElementById("tagForest").classList.add("unlocked");
+        document.getElementById("tagForest").textContent = "Unlocked";
+    }
+    if (state.sessions >= 8) {
+        document.getElementById("tagSunrise").classList.add("unlocked");
+        document.getElementById("tagSunrise").textContent = "Unlocked";
+    }
+
+    if (state.sessions >= 1) document.getElementById("badgeFirst").classList.remove("locked");
+    if (state.streak >= 7) document.getElementById("badgeStreak7").classList.remove("locked");
+    if (state.breathScore >= 3.5) document.getElementById("badgeScore35").classList.remove("locked");
+    if (stage.index >= 4) document.getElementById("badgeTree").classList.remove("locked");
+
+    // Audio icon state
+    const soundWaves = document.getElementById("soundWaves");
+    if (soundWaves) soundWaves.style.display = state.sound ? "block" : "none";
+
+    drawSanctuaryTree();
+}
+
+// Initial Call
+updateUI();
+window.addEventListener('resize', drawSanctuaryTree);
+
+// --- TAB NAVIGATION ---
+document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.onclick = () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+        tab.classList.add('active');
+        const targetView = document.getElementById(tab.dataset.target);
+        if (targetView) targetView.classList.add('active');
+    };
+});
+
+// --- SESSION PREP & BREATHING LOOP ---
+const prepModal = document.getElementById("prepModal");
+const heroOverlay = document.getElementById("heroBreathingOverlay");
+const completionModal = document.getElementById("completionModal");
+const heroPhaseTitle = document.getElementById("heroPhaseTitle");
+const heroTimer = document.getElementById("heroTimer");
+const orbCore = document.getElementById("orbCore");
+const orbAura = document.getElementById("orbAura");
+
+let isRunning = false;
+let currentCycle = 0;
+
+document.getElementById("homeStartBtn").onclick = () => {
+    prepModal.classList.add("active");
+};
+
+document.getElementById("closePrepBtn").onclick = () => {
+    prepModal.classList.remove("active");
+};
+
+document.getElementById("beginSessionBtn").onclick = () => {
+    prepModal.classList.remove("active");
+    startHeroBreathing();
+};
+
+function setOrbState(phase) {
+    if (phase === 'INHALE') {
+        heroPhaseTitle.textContent = "INHALE";
+        heroPhaseTitle.style.color = "var(--inhale-color)";
+        orbCore.style.transform = "scale(1.25)";
+        orbAura.style.transform = "scale(1.4)";
+        orbAura.style.opacity = "0.9";
+        orbAura.style.background = "radial-gradient(circle, var(--inhale-color) 0%, rgba(94, 200, 255, 0) 70%)";
+    } else if (phase === 'HOLD') {
+        heroPhaseTitle.textContent = "HOLD";
+        heroPhaseTitle.style.color = "var(--hold-color)";
+        orbCore.style.transform = "scale(1.2)";
+        orbAura.style.transform = "scale(1.25)";
+        orbAura.style.opacity = "0.6";
+        orbAura.style.background = "radial-gradient(circle, var(--hold-color) 0%, rgba(167, 139, 250, 0) 70%)";
+    } else if (phase === 'EXHALE') {
+        heroPhaseTitle.textContent = "EXHALE";
+        heroPhaseTitle.style.color = "var(--exhale-color)";
+        orbCore.style.transform = "scale(0.75)";
+        orbAura.style.transform = "scale(0.8)";
+        orbAura.style.opacity = "0.3";
+        orbAura.style.background = "radial-gradient(circle, var(--exhale-color) 0%, rgba(124, 246, 215, 0) 70%)";
+    }
+    playPhaseSound(phase);
+    triggerHaptic();
+}
+
+function runPhaseTimer(phaseName, durationSec) {
+    return new Promise(resolve => {
+        if (!isRunning) { resolve(false); return; }
+
+        setOrbState(phaseName);
+        let elapsed = 0;
+        heroTimer.textContent = durationSec.toFixed(1);
+
+        const stepMs = 100;
+        const totalSteps = durationSec * 10;
+        let steps = 0;
+
+        const interval = setInterval(() => {
+            if (!isRunning) {
+                clearInterval(interval);
+                resolve(false);
+                return;
+            }
+            steps++;
+            elapsed = steps / 10;
+            const remaining = Math.max(0, durationSec - elapsed);
+            heroTimer.textContent = remaining.toFixed(1);
+
+            if (steps >= totalSteps) {
+                clearInterval(interval);
+                resolve(true);
+            }
+        }, stepMs);
+    });
+}
+
+async function startHeroBreathing() {
+    isRunning = true;
+    currentCycle = 0;
+    heroOverlay.classList.add("active");
+
+    const timings = getTimings(state.breathScore);
+
+    while (isRunning && currentCycle < 5) {
+        // 1. INHALE
+        if (!(await runPhaseTimer("INHALE", timings.inhale))) break;
+
+        // 2. HOLD
+        if (!(await runPhaseTimer("HOLD", timings.hold))) break;
+
+        // 3. EXHALE
+        if (!(await runPhaseTimer("EXHALE", timings.exhale))) break;
+
+        currentCycle++;
+    }
+
+    if (currentCycle >= 5) {
+        finishSession();
+    }
+}
+
+function finishSession() {
+    isRunning = false;
+    heroOverlay.classList.remove("active");
+
+    state.sessions++;
+    state.xp += 50;
+    saveState();
+    updateUI();
+
+    completionModal.classList.add("active");
+}
+
+// --- RATING FEEDBACK SELECTION ---
+document.querySelectorAll('.rate-card').forEach(card => {
+    card.onclick = () => {
+        const rate = card.dataset.rate;
+        if (rate === 'easy') state.breathScore += 0.05;
+        else if (rate === 'good') state.breathScore += 0.03;
+        else if (rate === 'toohard') state.breathScore = Math.max(3.00, state.breathScore - 0.02);
+
+        saveState();
+        updateUI();
+        completionModal.classList.remove("active");
+    };
+});
+
+// --- TOUCH GESTURE HANDLING FOR IMMERSIVE BREATHING ---
+let touchStartY = 0;
+let touchTimer = null;
+
+heroOverlay.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+    touchTimer = setTimeout(() => {
+        // Long Press to end session
+        isRunning = false;
+        heroOverlay.classList.remove("active");
+        triggerHaptic();
+    }, 600);
+}, { passive: true });
+
+heroOverlay.addEventListener('touchend', (e) => {
+    if (touchTimer) clearTimeout(touchTimer);
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffY = touchStartY - touchEndY;
+
+    if (Math.abs(diffY) > 40) {
+        if (diffY > 0) {
+            // Swipe Up -> Resume
+            if (!isRunning) startHeroBreathing();
+        } else {
+            // Swipe Down -> Pause
+            isRunning = false;
+            heroPhaseTitle.textContent = "PAUSED";
+        }
+    }
+}, { passive: true });
+
+heroOverlay.addEventListener('click', () => {
+    state.sound = !state.sound;
+    saveState();
+    updateUI();
+});
+
+document.getElementById("audioToggleBtn").onclick = () => {
+    state.sound = !state.sound;
+    saveState();
+    updateUI();
+};
+
+// --- THEME SELECTOR ---
+document.querySelectorAll('.theme-chip').forEach(chip => {
+    chip.onclick = () => {
+        document.querySelectorAll('.theme-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.theme = chip.dataset.theme;
+        document.body.className = state.theme === 'night' ? '' : `theme-${state.theme}`;
+        saveState();
+    };
+});
+</script>
+</body>
+</html>
